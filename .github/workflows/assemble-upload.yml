@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/assemble-upload.yml'
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
@@ -37,5 +39,3 @@ jobs:
           git add -A
           git commit -m "Add Launch-2026-7-10-194208635.log"
           git push
-
-# retrigger
