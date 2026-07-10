@@ -1,10 +1,6 @@
 name: Assemble uploaded log
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/assemble-upload.yml'
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -21,33 +17,59 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Rebuild and verify file
+      - name: Rebuild, verify, and preserve diagnostics
         shell: bash
         run: |
-          set -euo pipefail
-          echo 'Staged files:'
-          find .upload_tmp -maxdepth 1 -type f -printf '%f\n' | sort -V
+          set -u
+          exec > >(tee assembly-run.log) 2>&1
 
-          find .upload_tmp -maxdepth 1 -type f -name 'launch_log.xz.b64.*' -print0 \
-            | sort -zV \
-            | xargs -0 cat > /tmp/launch-log.b64
+          echo '=== staged files (natural order) ==='
+          find .upload_tmp -maxdepth 1 -type f -printf '%f %s bytes\n' | sort -V
 
-          find .upload_tmp -maxdepth 1 -type f -name 'launch_log.rest.hex.*' -print0 \
-            | sort -zV \
-            | xargs -0 cat \
-            | xxd -r -p >> /tmp/launch-log.b64
+          mapfile -d '' B64_FILES < <(find .upload_tmp -maxdepth 1 -type f -name 'launch_log.xz.b64.*' -print0 | sort -zV)
+          mapfile -d '' HEX_FILES < <(find .upload_tmp -maxdepth 1 -type f -name 'launch_log.rest.hex.*' -print0 | sort -zV)
 
-          base64 --decode /tmp/launch-log.b64 > /tmp/launch-log.xz
-          xz --decompress --stdout /tmp/launch-log.xz > Launch-2026-7-10-194208635.log
-          echo "2dc3acde4b609e86de8fb4ce139b434cd0db1edf3f7dd3a951b84053ad4b21d1  Launch-2026-7-10-194208635.log" | sha256sum --check
+          echo "B64 parts: ${#B64_FILES[@]}"
+          printf '%s\n' "${B64_FILES[@]}"
+          echo "HEX parts: ${#HEX_FILES[@]}"
+          printf '%s\n' "${HEX_FILES[@]}"
 
-          rm -rf .upload_tmp
-          rm -f .github/workflows/assemble-upload.yml
-          rmdir .github/workflows 2>/dev/null || true
-          rmdir .github 2>/dev/null || true
+          : > /tmp/launch-log.b64
+          if ((${#B64_FILES[@]})); then cat "${B64_FILES[@]}" >> /tmp/launch-log.b64; fi
+          if ((${#HEX_FILES[@]})); then cat "${HEX_FILES[@]}" | xxd -r -p >> /tmp/launch-log.b64; fi
+
+          echo '=== combined sizes ==='
+          wc -c /tmp/launch-log.b64
+
+          ok=1
+          base64 --decode /tmp/launch-log.b64 > /tmp/launch-log.xz || ok=0
+          wc -c /tmp/launch-log.xz || true
+          if ((ok)); then
+            xz --decompress --stdout /tmp/launch-log.xz > Launch-2026-7-10-194208635.log || ok=0
+          fi
+          if [[ -f Launch-2026-7-10-194208635.log ]]; then
+            wc -c Launch-2026-7-10-194208635.log
+            sha256sum Launch-2026-7-10-194208635.log
+            echo "2dc3acde4b609e86de8fb4ce139b434cd0db1edf3f7dd3a951b84053ad4b21d1  Launch-2026-7-10-194208635.log" | sha256sum --check || ok=0
+          else
+            ok=0
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Add Launch-2026-7-10-194208635.log"
-          git push origin main
+
+          if ((ok)); then
+            rm -rf .upload_tmp
+            rm -f assembly-run.log
+            rm -f .github/workflows/assemble-upload.yml
+            rmdir .github/workflows 2>/dev/null || true
+            rmdir .github 2>/dev/null || true
+            git add -A
+            git commit -m "Add Launch-2026-7-10-194208635.log"
+            git push origin main
+          else
+            git add assembly-run.log
+            git commit -m "Save log assembly diagnostics" || true
+            git push origin main
+            exit 1
+          fi
