@@ -1,12 +1,9 @@
 name: Assemble uploaded log
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/assemble-upload.yml'
-  issues:
-    types: [opened]
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,6 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Rebuild and verify file
@@ -38,4 +36,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Add Launch-2026-7-10-194208635.log"
-          git push
+          git push origin main
