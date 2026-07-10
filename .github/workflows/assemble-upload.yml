@@ -1,8 +1,10 @@
 name: Assemble uploaded log
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/assemble-upload.yml'
   workflow_dispatch:
 
 permissions:
@@ -21,8 +23,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .upload_tmp/launch_log.xz.b64.* > /tmp/launch-log.b64
-          cat .upload_tmp/launch_log.rest.hex.* | xxd -r -p >> /tmp/launch-log.b64
+
+          find .upload_tmp -maxdepth 1 -type f -name 'launch_log.xz.b64.*' -print0 \
+            | sort -zV \
+            | xargs -0 cat > /tmp/launch-log.b64
+
+          find .upload_tmp -maxdepth 1 -type f -name 'launch_log.rest.hex.*' -print0 \
+            | sort -zV \
+            | xargs -0 cat \
+            | xxd -r -p >> /tmp/launch-log.b64
+
           base64 --decode /tmp/launch-log.b64 > /tmp/launch-log.xz
           xz --decompress --stdout /tmp/launch-log.xz > Launch-2026-7-10-194208635.log
           echo "2dc3acde4b609e86de8fb4ce139b434cd0db1edf3f7dd3a951b84053ad4b21d1  Launch-2026-7-10-194208635.log" | sha256sum --check
