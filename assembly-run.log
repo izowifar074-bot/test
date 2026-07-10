@@ -1,0 +1,41 @@
+=== staged files (natural order) ===
+launch_log.rest.hex.001 4000 bytes
+launch_log.rest.hex.002 4000 bytes
+launch_log.rest.hex.003 4000 bytes
+launch_log.rest.hex.004 4000 bytes
+launch_log.rest.hex.005 4000 bytes
+launch_log.rest.hex.006 4000 bytes
+launch_log.rest.hex.007 4000 bytes
+launch_log.rest.hex.008 4000 bytes
+launch_log.rest.hex.009 4000 bytes
+launch_log.rest.hex.010 4000 bytes
+launch_log.rest.hex.011 1296 bytes
+launch_log.xz.b64.001 7600 bytes
+launch_log.xz.b64.002 7600 bytes
+launch_log.xz.b64.003 10000 bytes
+launch_log.xz.b64.004 10000 bytes
+B64 parts: 4
+.upload_tmp/launch_log.xz.b64.001
+.upload_tmp/launch_log.xz.b64.002
+.upload_tmp/launch_log.xz.b64.003
+.upload_tmp/launch_log.xz.b64.004
+HEX parts: 11
+.upload_tmp/launch_log.rest.hex.001
+.upload_tmp/launch_log.rest.hex.002
+.upload_tmp/launch_log.rest.hex.003
+.upload_tmp/launch_log.rest.hex.004
+.upload_tmp/launch_log.rest.hex.005
+.upload_tmp/launch_log.rest.hex.006
+.upload_tmp/launch_log.rest.hex.007
+.upload_tmp/launch_log.rest.hex.008
+.upload_tmp/launch_log.rest.hex.009
+.upload_tmp/launch_log.rest.hex.010
+.upload_tmp/launch_log.rest.hex.011
+=== combined sizes ===
+55848 /tmp/launch-log.b64
+41886 /tmp/launch-log.xz
+xz: /tmp/launch-log.xz: Compressed data is corrupt
+525383 Launch-2026-7-10-194208635.log
+b0884e96d607a77f9cae38fccb01ec0f7e1edecfa7b4f07ab4404a2bcdc411d6  Launch-2026-7-10-194208635.log
+Launch-2026-7-10-194208635.log: FAILED
+sha256sum: WARNING: 1 computed checksum did NOT match
